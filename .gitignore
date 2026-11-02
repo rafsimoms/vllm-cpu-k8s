@@ -1,0 +1,13 @@
+k8s/overlays/minikube/secrets.env
+*.env
+!*.env.example
+
+.venv/
+__pycache__/
+*.pyc
+
+serve-help.txt
+bench-help.txt
+server.log
+*.log
+.DS_Store
