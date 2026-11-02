@@ -7,7 +7,7 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: Recreate            
+    type: Recreate
   selector:
     matchLabels:
       app: vllm
@@ -17,12 +17,12 @@ spec:
         app: vllm
     spec:
       automountServiceAccountToken: false
-      enableServiceLinks: false   
-      securityContext:                       
+      enableServiceLinks: false
+      securityContext:
         runAsNonRoot: true
         runAsUser: 10001
         runAsGroup: 10001
-        fsGroup: 10001                       
+        fsGroup: 10001
         seccompProfile:
           type: RuntimeDefault
 
@@ -32,9 +32,9 @@ spec:
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
-                name: vllm-env               
+                name: vllm-env
           env:
-            - name: HF_TOKEN                 
+            - name: HF_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: llm-secrets
@@ -61,26 +61,35 @@ spec:
           args: ["--config", "/etc/vllm/vllm.yaml"]
           envFrom:
             - configMapRef:
-                name: vllm-env             
+                name: vllm-env
           env:
-            - name: VLLM_API_KEY            
+            - name: VLLM_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: llm-secrets
                   key: VLLM_API_KEY
-            - name: HF_HUB_OFFLINE          
+            - name: HF_HUB_OFFLINE
               value: "1"
             - name: TRANSFORMERS_OFFLINE
               value: "1"
             - name: VLLM_CACHE_ROOT
               value: /home/vllm/.cache/vllm
+            # Телеметрия vLLM выключена: она пишет файл в ~/.config/vllm
+            # и отправляет статистику в сеть, а поду не нужно ни то, ни другое.
+            - name: VLLM_NO_USAGE_STATS
+              value: "1"
+            - name: DO_NOT_TRACK
+              value: "1"
+            # Корневая ФС только для чтения: не пытаться писать __pycache__.
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
           ports:
             - name: http
               containerPort: 8000
-          startupProbe:                     
+          startupProbe:
             httpGet: { path: /health, port: http }
             periodSeconds: 10
-            failureThreshold: 60             
+            failureThreshold: 60
           readinessProbe:
             httpGet: { path: /health, port: http }
             periodSeconds: 10
@@ -93,22 +102,25 @@ spec:
           volumeMounts:
             - name: model-cache
               mountPath: /models
-              readOnly: true                 
+              readOnly: true
             - name: vllm-config
               mountPath: /etc/vllm
               readOnly: true
+            # Все места, куда vLLM пишет. Остальная ФС только для чтения.
             - name: tmp
               mountPath: /tmp
             - name: cache
               mountPath: /home/vllm/.cache
+            - name: config
+              mountPath: /home/vllm/.config
             - name: dshm
               mountPath: /dev/shm
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: false   
+            readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
-          resources:                        
+          resources:
             requests: { cpu: "4", memory: 4Gi }
             limits:   { memory: 6Gi }
 
@@ -122,6 +134,8 @@ spec:
         - name: tmp
           emptyDir: {}
         - name: cache
+          emptyDir: {}
+        - name: config
           emptyDir: {}
         - name: dshm
           emptyDir:
