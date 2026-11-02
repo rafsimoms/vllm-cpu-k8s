@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "filters": {
+    "privacy": { "()": "privacy_filter.PromptRedactionFilter" }
+  },
+  "formatters": {
+    "plain": {
+      "format": "%(asctime)s %(levelname)s %(name)s: %(message)s",
+      "datefmt": "%Y-%m-%dT%H:%M:%S"
+    }
+  },
+  "handlers": {
+    "stdout": {
+      "class": "logging.StreamHandler",
+      "stream": "ext://sys.stdout",
+      "formatter": "plain",
+      "filters": ["privacy"]
+    }
+  },
+  "loggers": {
+    "vllm":           { "handlers": ["stdout"], "level": "INFO",    "propagate": false },
+    "audit":          { "handlers": ["stdout"], "level": "INFO",    "propagate": false },
+    "uvicorn":        { "handlers": ["stdout"], "level": "INFO",    "propagate": false },
+    "uvicorn.access": { "handlers": ["stdout"], "level": "WARNING", "propagate": false }
+  },
+  "root": { "handlers": ["stdout"], "level": "WARNING" }
+}
