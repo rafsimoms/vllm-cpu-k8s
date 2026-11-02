@@ -766,9 +766,11 @@ torchaudio==2.11.1+cpu ; platform_machine == 'x86_64' and sys_platform == 'linux
     # via
     #   vllm
     #   vllm-cpu-serving
-torchcodec==0.17.0 ; platform_machine == 'x86_64' and sys_platform == 'linux' \
-    --hash=sha256:defd5f0901999c9e981f6465a0f4aac8b5a5147e38e539b77c0711c015cf5349
-    # via vllm
+torchcodec==0.17.0+cpu ; platform_machine == 'x86_64' and sys_platform == 'linux' \
+    --hash=sha256:de8e58e5f30692ee7cf92b1b313d0ffdeaac95148525ef2a865067fca0255246
+    # via
+    #   vllm
+    #   vllm-cpu-serving
 torchvision==0.28.0+cpu ; platform_machine == 'x86_64' and sys_platform == 'linux' \
     --hash=sha256:b545d46f4d2f9d30381281cf22874bfe1d32a8a7b0ee8396fccde89f30c6a9d9
     # via
