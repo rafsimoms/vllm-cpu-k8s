@@ -34,13 +34,13 @@ restart-test: ## проверка, что после рестарта модел
 	bash tests/check_offline_restart.sh
 
 bench-pod:    ## поднять под для нагрузочного теста
-	kubectl apply -f bench/bench-pod.yaml
+	kubectl apply -k bench
 	kubectl -n $(NS) wait --for=condition=Ready pod/bench --timeout=5m
 
-bench:        ## нагрузочный тест 
+bench:        ## нагрузочный тест и таблица
 	bash bench/run_bench.sh
 	python3 bench/summarize.py
 
-clean:        ## удалить всё из кластера 
+clean:        ## удалить всё из кластера
 	kubectl -n $(NS) delete pod bench --ignore-not-found
 	kubectl delete -k $(OVERLAY)

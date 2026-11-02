@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bench
+  labels:
+    app: bench
+spec:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  restartPolicy: Never
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: bench
+      image: vllm-cpu                  
+      imagePullPolicy: IfNotPresent
+      command: ["sleep", "infinity"]   
+      env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: llm-secrets
+              key: VLLM_API_KEY
+        - name: HF_HUB_OFFLINE
+          value: "1"
+        - name: VLLM_NO_USAGE_STATS
+          value: "1"
+      volumeMounts:
+        - name: model-cache            
+          mountPath: /models
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /home/vllm/.cache
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
+      resources:
+        requests: { cpu: 500m, memory: 512Mi }
+        limits:   { cpu: "1", memory: 2Gi }
+  volumes:
+    - name: model-cache
+      persistentVolumeClaim:
+        claimName: model-cache
+    - name: tmp
+      emptyDir: {}
+    - name: cache
+      emptyDir: {}

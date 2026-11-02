@@ -93,12 +93,13 @@ spec:
           readinessProbe:
             httpGet: { path: /health, port: http }
             periodSeconds: 10
+            timeoutSeconds: 5
             failureThreshold: 3
           livenessProbe:
             httpGet: { path: /health, port: http }
             periodSeconds: 20
-            timeoutSeconds: 5
-            failureThreshold: 3
+            timeoutSeconds: 10
+            failureThreshold: 6
           volumeMounts:
             - name: model-cache
               mountPath: /models
