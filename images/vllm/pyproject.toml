@@ -1,0 +1,24 @@
+[project]
+name = "vllm-cpu-serving"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "vllm==0.27.1",
+    "torch",
+    "torchaudio",
+    "torchvision",
+]
+
+[tool.uv]
+environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
+
+[tool.uv.sources]
+vllm = { url = "https://github.com/vllm-project/vllm/releases/download/v0.27.1/vllm-0.27.1+cpu-cp38-abi3-manylinux_2_34_x86_64.whl" }
+torch = { index = "pytorch-cpu" }
+torchaudio = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
