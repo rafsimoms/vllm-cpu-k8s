@@ -3,7 +3,8 @@
 set -euo pipefail
 BASE_URL="${BASE_URL:-http://localhost:8000}"
 MODEL="${MODEL:-qwen-instruct}"
-: "${API_KEY:?Задай переменную API_KEY}"
+API_KEY="${API_KEY:-$(grep '^VLLM_API_KEY=' k8s/overlays/minikube/secrets.env 2>/dev/null | cut -d= -f2- || true)}"
+[ -n "$API_KEY" ] || { echo "FAIL: задай API_KEY или заполни k8s/overlays/minikube/secrets.env" >&2; exit 1; }
 
 echo "1) /health без ключа → ждём 200"
 code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/health")

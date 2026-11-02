@@ -4,7 +4,8 @@ set -euo pipefail
 BASE_URL="${BASE_URL:-http://localhost:8000}"
 MODEL="${MODEL:-qwen-instruct}"
 NS="${NS:-llm}"
-: "${API_KEY:?Задай переменную API_KEY}"
+API_KEY="${API_KEY:-$(grep '^VLLM_API_KEY=' k8s/overlays/minikube/secrets.env 2>/dev/null | cut -d= -f2- || true)}"
+[ -n "$API_KEY" ] || { echo "FAIL: задай API_KEY или заполни k8s/overlays/minikube/secrets.env" >&2; exit 1; }
 
 CANARY="CANARY-$(date +%s)-$RANDOM"
 echo "Отправляем промпт с меткой $CANARY"
