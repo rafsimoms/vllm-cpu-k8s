@@ -2,7 +2,10 @@
 import logging
 import re
 
-BLOCKED_LOGGERS = ("vllm.entrypoints.logger",)
+BLOCKED_LOGGERS = (
+    "vllm.entrypoints.logger",
+    "vllm.entrypoints.serve.utils.request_logger",
+)
 
 _SENSITIVE = re.compile(
     r"\b(prompt|prompt_token_ids|messages|outputs?)\s*[:=].*",

@@ -11,3 +11,4 @@ bench-help.txt
 server.log
 *.log
 .DS_Store
+serve-help.txt

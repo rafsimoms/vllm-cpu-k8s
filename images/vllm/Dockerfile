@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 FROM ${PYTHON_IMAGE}
 RUN apt-get update \
- && apt-get install -y --no-install-recommends libtcmalloc-minimal4 libnuma1 \
+ && apt-get install -y --no-install-recommends g++ libtcmalloc-minimal4 libnuma1 \
  && rm -rf /var/lib/apt/lists/*
 RUN groupadd --gid 10001 vllm \
  && useradd --uid 10001 --gid 10001 --create-home --home-dir /home/vllm \
