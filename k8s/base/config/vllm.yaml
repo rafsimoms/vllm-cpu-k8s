@@ -1,0 +1,11 @@
+model: /models/Qwen__Qwen2.5-0.5B-Instruct/main
+served-model-name: qwen-instruct
+dtype: bfloat16
+max-model-len: 3072
+max-num-seqs: 16
+max-num-batched-tokens: 4096
+host: 0.0.0.0
+port: 8000
+disable-uvicorn-access-log: true
+middleware:
+  - audit_middleware.AuditMiddleware

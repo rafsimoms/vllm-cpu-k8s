@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm
+  labels:
+    app: vllm
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate            
+  selector:
+    matchLabels:
+      app: vllm
+  template:
+    metadata:
+      labels:
+        app: vllm
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false   
+      securityContext:                       
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001                       
+        seccompProfile:
+          type: RuntimeDefault
+
+      initContainers:
+        - name: model-downloader
+          image: model-downloader:0.1.0
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: vllm-env               
+          env:
+            - name: HF_TOKEN                 
+              valueFrom:
+                secretKeyRef:
+                  name: llm-secrets
+                  key: HF_TOKEN
+                  optional: true
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests: { cpu: 250m, memory: 256Mi }
+            limits:   { memory: 1Gi }
+
+      containers:
+        - name: vllm
+          image: vllm-cpu:0.1.0
+          imagePullPolicy: IfNotPresent
+          args: ["--config", "/etc/vllm/vllm.yaml"]
+          envFrom:
+            - configMapRef:
+                name: vllm-env             
+          env:
+            - name: VLLM_API_KEY            
+              valueFrom:
+                secretKeyRef:
+                  name: llm-secrets
+                  key: VLLM_API_KEY
+            - name: HF_HUB_OFFLINE          
+              value: "1"
+            - name: TRANSFORMERS_OFFLINE
+              value: "1"
+            - name: VLLM_CACHE_ROOT
+              value: /home/vllm/.cache/vllm
+          ports:
+            - name: http
+              containerPort: 8000
+          startupProbe:                     
+            httpGet: { path: /health, port: http }
+            periodSeconds: 10
+            failureThreshold: 60             
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models
+              readOnly: true                 
+            - name: vllm-config
+              mountPath: /etc/vllm
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /home/vllm/.cache
+            - name: dshm
+              mountPath: /dev/shm
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false   
+            capabilities:
+              drop: ["ALL"]
+          resources:                        
+            requests: { cpu: "4", memory: 4Gi }
+            limits:   { memory: 6Gi }
+
+      volumes:
+        - name: model-cache
+          persistentVolumeClaim:
+            claimName: model-cache
+        - name: vllm-config
+          configMap:
+            name: vllm-config
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2Gi
